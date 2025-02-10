@@ -19,13 +19,6 @@
 
             var song = new Audio("../assets/bad_apple.wav");
 
-            function start() {
-                song.currentTime = 0;
-                song.play();
-
-                requestAnimationFrame(render_frame);
-            }
-
             async function on_page_load() {
                 await load_frames();
 
@@ -33,6 +26,13 @@
 
                 width = surface.getBoundingClientRect().width;
                 height = surface.getBoundingClientRect().height;
+            }
+
+            function start() {
+                song.currentTime = 0;
+                song.play();
+
+                requestAnimationFrame(render_frame);
             }
 
             function render_frame(timestamp) {
