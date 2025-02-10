@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Bad Apple in HTML</title>
+
+        <script type="text/javascript">
+            var frames = [];
+            const TOTAL_FRAME_COUNT = 6562; // i dont want to this, but i have no other choice
+
+            const FPS_TARGET = 30;
+            const frame_duration = 1.0 / FPS_TARGET;
+
+            var start_time = null;
+
+            var last_update = Date.now();
+            var frame_delta = 0.0;
+
+            var animation_frame_id = null;
+
+            var song = new Audio("../assets/bad_apple.wav");
+
+            function start() {
+                song.currentTime = 0;
+                song.play();
+
+                requestAnimationFrame(render_frame);
+            }
+
+            async function on_page_load() {
+                await load_frames();
+
+                document.getElementById("render_button").style.display = "block";
+
+                surface = document.getElementById("surface");
+                context = surface.getContext("2d");
+
+                width = surface.getBoundingClientRect().width;
+                height = surface.getBoundingClientRect().height;
+            }
+
+            function render_frame(timestamp) {
+                var surface = document.getElementById("surface");
+                var context = surface.getContext("2d");
+
+                var width = surface.getBoundingClientRect().width;
+                var height = surface.getBoundingClientRect().height;
+
+                if (context) {
+                    if (!start_time) {
+                        start_time = timestamp;
+                    }
+
+                    var elapsed_time = (timestamp - start_time) / 1000.0;
+
+                    var current_frame = Math.floor(elapsed_time * FPS_TARGET);
+                    if (current_frame >= TOTAL_FRAME_COUNT) {
+                        cancelAnimationFrame(animation_frame_id);
+                    }
+
+                    context.clearRect(0, 0, width, height);
+
+                    context.drawImage(frames[current_frame], 0, 0, width, height);
+
+                    draw_text(context, `FPS: ${(1000.0 / frame_delta).toFixed(2)}`, 5, 30, "30px Arial", "red");
+                    draw_text(context, `Frame #: ${current_frame}`, 5, height - 35, "20px Arial", "red");
+                    draw_text(context, `Progress: ${((current_frame / TOTAL_FRAME_COUNT) * 100).toFixed(2)}%`, 5, height - 12, "20px Arial", "red");
+
+                    if (frame_delta >= frame_duration * 1000) {
+                        frame_delta = 0;
+                    }
+                    else {
+                        frame_delta = Date.now() - last_update;
+                        last_update = Date.now();
+                    }
+
+                    animation_frame_id = requestAnimationFrame(render_frame);
+                }
+            }
+
+            async function load_frames() {
+                for (let i = 1; i <= TOTAL_FRAME_COUNT; i++) {
+                    let image = new Image();
+
+                    var frame_name = "bad_apple_";
+                    if (i < 10) {
+                        frame_name += "00" + i;
+                    }
+                    else if (i < 100) {
+                        frame_name += "0" + i;
+                    }
+                    else if (i <= TOTAL_FRAME_COUNT) {
+                        frame_name += i;
+                    }
+
+                    image.src = `../assets/frames/${frame_name}.png`;
+
+                    await new Promise(result => image.onload = result);
+
+                    frames.push(image);
+                }
+
+                document.getElementById("loading_message").style.display = "none";
+            }
+
+            function draw_text(context, text, x, y, font, color) {
+                context.fillStyle = color;
+                context.font = font;
+
+                context.fillText(text, x, y);
+            }
+        </script>
+
+        <style type="text/css">
+            #render_button {
+                font-size: 30px;
+
+                width: 200px;
+                height: 70px;
+
+                display: none;
+
+                position: absolute;
+                top: 10px;
+                left: 1170px; /* i hate this, but idk what else to do */
+            }
+
+            #surface {
+                border: 2px solid black;
+            }
+
+            #loading_message {
+                font-family: Arial, sans-serif;
+            }
+        </style>
+    </head>
+
+    <body onload="on_page_load()">
+        <p id="loading_message">
+            Loading frames, please wait...
+        </p>
+
+        <button id="render_button" onclick="this.style.display = 'none'; start();">Start Render</button>
+
+        <canvas id="surface" width="1152" height="864"></canvas>
+    </body>
+</html>
