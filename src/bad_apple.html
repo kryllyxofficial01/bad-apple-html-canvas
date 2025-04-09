@@ -52,9 +52,20 @@
                     var current_frame = Math.floor(elapsed_time * FPS_TARGET);
                     if (current_frame >= TOTAL_FRAME_COUNT) {
                         cancelAnimationFrame(animation_frame_id);
+
+                        // basically just a black screen
+                        context.clearRect(0, 0, width, height);
+                        context.drawImage(frames[TOTAL_FRAME_COUNT - 1], 0, 0, width, height);
+
+                        document.getElementById("loading_message").textContent = "Finished";
+                        document.getElementById("loading_message").style.display = "";
+
+                        return;
                     }
 
                     context.clearRect(0, 0, width, height);
+
+                    console.log(`Currently rendering:\n${frames[current_frame].src}`);
 
                     context.drawImage(frames[current_frame], 0, 0, width, height);
 
@@ -91,10 +102,14 @@
 
                     image.src = `../assets/frames/${frame_name}.png`;
 
+                    console.log(`Loading frame '${frame_name}'...`);
+
                     await new Promise(result => image.onload = result);
 
                     frames.push(image);
                 }
+
+                console.log("Done");
 
                 document.getElementById("loading_message").style.display = "none";
             }
